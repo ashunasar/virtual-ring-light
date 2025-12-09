@@ -5,24 +5,27 @@ import TopBar from "./components/TopBar";
 import Controls from "./components/Controls";
 
 function App() {
-  const [brightness, setBrightness] = useState(100);
-  const [temperature, setTemperature] = useState(5500);
+  // Initialize state directly from localStorage
+  const [brightness, setBrightness] = useState(() => {
+    const saved = localStorage.getItem("brightness");
+    return saved ? Number(saved) : 100;
+  });
+
+  const [temperature, setTemperature] = useState(() => {
+    const saved = localStorage.getItem("temperature");
+    return saved ? Number(saved) : 5500;
+  });
+
   const [controlsVisible, setControlsVisible] = useState(true);
 
-  // Load saved settings from localStorage
-  useEffect(() => {
-    const savedBrightness = localStorage.getItem("brightness");
-    const savedTemp = localStorage.getItem("temperature");
-
-    if (savedBrightness) setBrightness(Number(savedBrightness));
-    if (savedTemp) setTemperature(Number(savedTemp));
-  }, []);
-
-  // Save settings to localStorage
+  // Save settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("brightness", brightness.toString());
+  }, [brightness]);
+
+  useEffect(() => {
     localStorage.setItem("temperature", temperature.toString());
-  }, [brightness, temperature]);
+  }, [temperature]);
 
   const toggleControls = () => {
     setControlsVisible(!controlsVisible);
