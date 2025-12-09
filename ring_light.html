@@ -1,324 +1,484 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Virtual Ring Light</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            overflow: hidden;
-            background: #000;
-        }
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        overflow: hidden;
+        background: #000;
+      }
 
-        .light-screen {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.3s ease;
-        }
+      .light-screen {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s ease;
+      }
 
+      .controls {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(10px);
+        padding: 20px 24px;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 340px;
+        max-width: 480px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      label {
+        color: #e5e7eb;
+        font-size: 13px;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .value-display {
+        color: #60a5fa;
+        font-weight: 600;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: #374151;
+        outline: none;
+        -webkit-appearance: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #60a5fa;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
+      }
+
+      input[type="range"]::-webkit-slider-thumb:hover {
+        background: #3b82f6;
+        transform: scale(1.07);
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #60a5fa;
+        cursor: pointer;
+        border: none;
+        transition: all 0.15s ease;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
+      }
+
+      input[type="range"]::-moz-range-thumb:hover {
+        background: #3b82f6;
+        transform: scale(1.07);
+      }
+
+      .preset-section-title {
+        color: #9ca3af;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .preset-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .preset-btn {
+        padding: 6px 8px;
+        border: none;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        color: #f9fafb;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .preset-btn.warm {
+        background: linear-gradient(135deg, #f97316, #ea580c);
+      }
+
+      .preset-btn.neutral {
+        background: linear-gradient(135deg, #e5e7eb, #9ca3af);
+        color: #111827;
+      }
+
+      .preset-btn.cool {
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+      }
+
+      .preset-btn.sunset {
+        background: linear-gradient(135deg, #fb7185, #f97316);
+      }
+
+      .preset-btn.night {
+        background: linear-gradient(135deg, #111827, #020617);
+      }
+
+      .preset-btn.soft {
+        background: linear-gradient(135deg, #fef9c3, #fbbf24);
+        color: #1f2937;
+      }
+
+      .preset-btn.green {
+        background: linear-gradient(135deg, #4ade80, #22c55e);
+      }
+
+      .preset-btn.active {
+        box-shadow: 0 0 0 2px #f9fafb, 0 0 0 4px rgba(59, 130, 246, 0.7);
+        transform: translateY(-1px);
+      }
+
+      .preset-btn:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+      }
+
+      .top-bar {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        z-index: 10;
+      }
+
+      .top-icon-btn {
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border: none;
+        color: #e5e7eb;
+        padding: 8px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.18s ease;
+      }
+
+      .top-icon-btn span.icon {
+        font-size: 15px;
+      }
+
+      .top-icon-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: translateY(-1px);
+      }
+
+      .top-icon-btn:active {
+        transform: translateY(0);
+      }
+
+      .controls.hidden {
+        display: none;
+      }
+
+      .info {
+        color: #9ca3af;
+        font-size: 11px;
+        text-align: center;
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+
+      @media (max-width: 480px) {
         .controls {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 20px 30px;
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            min-width: 320px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        label {
-            color: #fff;
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .value-display {
-            color: #60a5fa;
-            font-weight: 600;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #374151;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #60a5fa;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        input[type="range"]::-webkit-slider-thumb:hover {
-            background: #3b82f6;
-            transform: scale(1.1);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #60a5fa;
-            cursor: pointer;
-            border: none;
-            transition: all 0.15s ease;
-        }
-
-        input[type="range"]::-moz-range-thumb:hover {
-            background: #3b82f6;
-            transform: scale(1.1);
+          min-width: 0;
+          width: calc(100% - 32px);
+          padding: 16px 16px;
+          bottom: 16px;
         }
 
         .preset-buttons {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 10px;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
-        .preset-btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #fff;
+        .top-bar {
+          right: 10px;
+          top: 10px;
         }
 
-        .preset-btn.warm {
-            background: linear-gradient(135deg, #ff9a56, #ff6b35);
+        .top-icon-btn span.label {
+          display: none;
         }
-
-        .preset-btn.neutral {
-            background: linear-gradient(135deg, #e0e0e0, #b0b0b0);
-        }
-
-        .preset-btn.cool {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-        }
-
-        .preset-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
-        }
-
-        .preset-btn:active {
-            transform: translateY(0);
-        }
-
-        .toggle-controls {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            border: none;
-            color: #fff;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .toggle-controls:hover {
-            background: rgba(0, 0, 0, 0.8);
-        }
-
-        .controls.hidden {
-            display: none;
-        }
-
-        .info {
-            color: #9ca3af;
-            font-size: 11px;
-            text-align: center;
-            margin-top: 8px;
-            line-height: 1.4;
-        }
-
-        @media (max-width: 480px) {
-            .controls {
-                min-width: 280px;
-                padding: 16px 20px;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="light-screen" id="lightScreen"></div>
 
-    <button class="toggle-controls" id="toggleBtn">Hide Controls</button>
+    <div class="top-bar">
+      <button class="top-icon-btn" id="fullscreenBtn" title="Toggle fullscreen">
+        <span class="icon" id="fsIcon">⛶</span>
+        <span class="label">Fullscreen</span>
+      </button>
+      <button class="top-icon-btn" id="toggleBtn" title="Hide controls (H)">
+        <span class="icon">🎛️</span>
+        <span class="label">Hide Controls</span>
+      </button>
+    </div>
 
     <div class="controls" id="controls">
-        <div class="control-group">
-            <label>
-                <span>Brightness</span>
-                <span class="value-display" id="brightnessValue">100%</span>
-            </label>
-            <input type="range" id="brightness" min="0" max="100" value="100">
-        </div>
+      <div class="control-group">
+        <label>
+          <span>Brightness</span>
+          <span class="value-display" id="brightnessValue">100%</span>
+        </label>
+        <input type="range" id="brightness" min="0" max="100" value="100" />
+      </div>
 
-        <div class="control-group">
-            <label>
-                <span>Temperature</span>
-                <span class="value-display" id="tempValue">5500K</span>
-            </label>
-            <input type="range" id="temperature" min="2700" max="6500" value="5500">
-        </div>
+      <div class="control-group">
+        <label>
+          <span>Temperature</span>
+          <span class="value-display" id="tempValue">5500K</span>
+        </label>
+        <input
+          type="range"
+          id="temperature"
+          min="2700"
+          max="6500"
+          value="5500"
+        />
+      </div>
 
+      <div class="control-group">
+        <span class="preset-section-title">Presets</span>
         <div class="preset-buttons">
-            <button class="preset-btn warm" data-temp="3200">Warm</button>
-            <button class="preset-btn neutral" data-temp="5500">Neutral</button>
-            <button class="preset-btn cool" data-temp="6500">Cool</button>
+          <button class="preset-btn warm" data-temp="3200" data-bright="100">
+            Warm
+          </button>
+          <button class="preset-btn neutral" data-temp="5500" data-bright="100">
+            Neutral
+          </button>
+          <button class="preset-btn cool" data-temp="6500" data-bright="100">
+            Cool
+          </button>
+          <button class="preset-btn soft" data-temp="4500" data-bright="70">
+            Soft
+          </button>
+          <button class="preset-btn sunset" data-temp="3000" data-bright="80">
+            Sunset
+          </button>
+          <button class="preset-btn night" data-temp="3200" data-bright="35">
+            Night Mode
+          </button>
+          <button class="preset-btn green" data-temp="5000" data-bright="90">
+            Green Screen
+          </button>
+          <button class="preset-btn neutral" data-temp="5600" data-bright="80">
+            Daylight
+          </button>
         </div>
+      </div>
 
-        <div class="info">
-            Press F11 for fullscreen • Position camera behind monitor
-        </div>
+      <div class="info">
+        Tip: Use ⬆⬇ for brightness, ⬅➡ for temperature, H to hide controls. For
+        best effect, go fullscreen and place your camera just above or behind
+        the monitor.
+      </div>
     </div>
 
     <script>
-        const lightScreen = document.getElementById('lightScreen');
-        const brightnessSlider = document.getElementById('brightness');
-        const temperatureSlider = document.getElementById('temperature');
-        const brightnessValue = document.getElementById('brightnessValue');
-        const tempValue = document.getElementById('tempValue');
-        const toggleBtn = document.getElementById('toggleBtn');
-        const controls = document.getElementById('controls');
-        const presetBtns = document.querySelectorAll('.preset-btn');
+      const lightScreen = document.getElementById("lightScreen");
+      const brightnessSlider = document.getElementById("brightness");
+      const temperatureSlider = document.getElementById("temperature");
+      const brightnessValue = document.getElementById("brightnessValue");
+      const tempValue = document.getElementById("tempValue");
+      const toggleBtn = document.getElementById("toggleBtn");
+      const controls = document.getElementById("controls");
+      const presetBtns = document.querySelectorAll(".preset-btn");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+      const fsIcon = document.getElementById("fsIcon");
 
-        // Color temperature to RGB conversion
-        function kelvinToRGB(kelvin) {
-            const temp = kelvin / 100;
-            let red, green, blue;
+      function kelvinToRGB(kelvin) {
+        const temp = kelvin / 100;
+        let red, green, blue;
 
-            if (temp <= 66) {
-                red = 255;
-                green = temp;
-                green = 99.4708025861 * Math.log(green) - 161.1195681661;
+        if (temp <= 66) {
+          red = 255;
+          green = temp;
+          green = 99.4708025861 * Math.log(green) - 161.1195681661;
 
-                if (temp <= 19) {
-                    blue = 0;
-                } else {
-                    blue = temp - 10;
-                    blue = 138.5177312231 * Math.log(blue) - 305.0447927307;
-                }
-            } else {
-                red = temp - 60;
-                red = 329.698727446 * Math.pow(red, -0.1332047592);
+          if (temp <= 19) {
+            blue = 0;
+          } else {
+            blue = temp - 10;
+            blue = 138.5177312231 * Math.log(blue) - 305.0447927307;
+          }
+        } else {
+          red = temp - 60;
+          red = 329.698727446 * Math.pow(red, -0.1332047592);
 
-                green = temp - 60;
-                green = 288.1221695283 * Math.pow(green, -0.0755148492);
+          green = temp - 60;
+          green = 288.1221695283 * Math.pow(green, -0.0755148492);
 
-                blue = 255;
-            }
-
-            return {
-                r: Math.max(0, Math.min(255, red)),
-                g: Math.max(0, Math.min(255, green)),
-                b: Math.max(0, Math.min(255, blue))
-            };
+          blue = 255;
         }
 
-        function updateLight() {
-            const brightness = brightnessSlider.value / 100;
-            const temperature = parseInt(temperatureSlider.value);
-            const rgb = kelvinToRGB(temperature);
+        return {
+          r: Math.max(0, Math.min(255, red)),
+          g: Math.max(0, Math.min(255, green)),
+          b: Math.max(0, Math.min(255, blue)),
+        };
+      }
 
-            const finalR = Math.round(rgb.r * brightness);
-            const finalG = Math.round(rgb.g * brightness);
-            const finalB = Math.round(rgb.b * brightness);
+      function updateLight() {
+        const brightness = brightnessSlider.value / 100;
+        const temperature = parseInt(temperatureSlider.value);
+        const rgb = kelvinToRGB(temperature);
 
-            lightScreen.style.backgroundColor = `rgb(${finalR}, ${finalG}, ${finalB})`;
-            brightnessValue.textContent = `${brightnessSlider.value}%`;
-            tempValue.textContent = `${temperature}K`;
-        }
+        const finalR = Math.round(rgb.r * brightness);
+        const finalG = Math.round(rgb.g * brightness);
+        const finalB = Math.round(rgb.b * brightness);
 
-        brightnessSlider.addEventListener('input', updateLight);
-        temperatureSlider.addEventListener('input', updateLight);
+        lightScreen.style.backgroundColor = `rgb(${finalR}, ${finalG}, ${finalB})`;
+        brightnessValue.textContent = `${brightnessSlider.value}%`;
+        tempValue.textContent = `${temperature}K`;
+      }
 
-        presetBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const temp = btn.getAttribute('data-temp');
-                temperatureSlider.value = temp;
-                updateLight();
-            });
-        });
-
-        let controlsVisible = true;
-        toggleBtn.addEventListener('click', () => {
-            controlsVisible = !controlsVisible;
-            if (controlsVisible) {
-                controls.classList.remove('hidden');
-                toggleBtn.textContent = 'Hide Controls';
-            } else {
-                controls.classList.add('hidden');
-                toggleBtn.textContent = 'Show Controls';
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'h' || e.key === 'H') {
-                toggleBtn.click();
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                brightnessSlider.value = Math.min(100, parseInt(brightnessSlider.value) + 5);
-                updateLight();
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                brightnessSlider.value = Math.max(0, parseInt(brightnessSlider.value) - 5);
-                updateLight();
-            } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                temperatureSlider.value = Math.min(6500, parseInt(temperatureSlider.value) + 100);
-                updateLight();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                temperatureSlider.value = Math.max(2700, parseInt(temperatureSlider.value) - 100);
-                updateLight();
-            }
-        });
-
-        // Initialize
+      brightnessSlider.addEventListener("input", () => {
+        clearPresetActive();
         updateLight();
+      });
+
+      temperatureSlider.addEventListener("input", () => {
+        clearPresetActive();
+        updateLight();
+      });
+
+      function clearPresetActive() {
+        presetBtns.forEach((btn) => btn.classList.remove("active"));
+      }
+
+      presetBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const temp = btn.getAttribute("data-temp");
+          const bright =
+            btn.getAttribute("data-bright") || brightnessSlider.value;
+
+          temperatureSlider.value = temp;
+          brightnessSlider.value = bright;
+          clearPresetActive();
+          btn.classList.add("active");
+          updateLight();
+        });
+      });
+
+      let controlsVisible = true;
+      toggleBtn.addEventListener("click", () => {
+        controlsVisible = !controlsVisible;
+        if (controlsVisible) {
+          controls.classList.remove("hidden");
+          toggleBtn.querySelector(".label").textContent = "Hide Controls";
+        } else {
+          controls.classList.add("hidden");
+          toggleBtn.querySelector(".label").textContent = "Show Controls";
+        }
+      });
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen?.();
+        } else {
+          document.exitFullscreen?.();
+        }
+      }
+
+      fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+      document.addEventListener("fullscreenchange", () => {
+        if (document.fullscreenElement) {
+          fsIcon.textContent = "🞬"; // exit icon
+          fullscreenBtn.querySelector(".label").textContent = "Exit Fullscreen";
+        } else {
+          fsIcon.textContent = "⛶"; // enter icon
+          fullscreenBtn.querySelector(".label").textContent = "Fullscreen";
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "h" || e.key === "H") {
+          toggleBtn.click();
+        } else if (e.key === "f" || e.key === "F") {
+          toggleFullscreen();
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          brightnessSlider.value = Math.min(
+            100,
+            parseInt(brightnessSlider.value) + 5
+          );
+          clearPresetActive();
+          updateLight();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          brightnessSlider.value = Math.max(
+            0,
+            parseInt(brightnessSlider.value) - 5
+          );
+          clearPresetActive();
+          updateLight();
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          temperatureSlider.value = Math.min(
+            6500,
+            parseInt(temperatureSlider.value) + 100
+          );
+          clearPresetActive();
+          updateLight();
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          temperatureSlider.value = Math.max(
+            2700,
+            parseInt(temperatureSlider.value) - 100
+          );
+          clearPresetActive();
+          updateLight();
+        }
+      });
+
+      updateLight();
     </script>
-</body>
+  </body>
 </html>
